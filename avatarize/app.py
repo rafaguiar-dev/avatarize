@@ -141,7 +141,7 @@ class Ponte:
 
             hwnd = self._window.native.Handle.ToInt32()
             dwm = ctypes.windll.dwmapi
-            on, caption = ctypes.c_int(1), ctypes.c_int(0x00220C0A)  # COLORREF de #0A0C22
+            on, caption = ctypes.c_int(1), ctypes.c_int(0x00131111)  # COLORREF de #111113
             dwm.DwmSetWindowAttribute(hwnd, 20, ctypes.byref(on), 4)
             dwm.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(caption), 4)
         except Exception:
@@ -422,7 +422,7 @@ def run() -> None:
         pass
     window = webview.create_window(
         config.APP_NAME, url=str(WEB / "index.html"), js_api=ponte, width=width, height=height,
-        min_size=(1000, 640), background_color="#0A0C22",
+        min_size=(1000, 640), background_color="#111113",
     )
     ponte._window = window
     window.events.shown += ponte._on_shown

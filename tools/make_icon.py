@@ -9,9 +9,9 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 OUT = Path(__file__).resolve().parents[1] / "avatarize" / "assets"
 S = 2048  # desenha grande e reduz (antialiasing)
 
-BLUE, VIOLET = (59, 140, 245), (180, 60, 240)
-NAVY_TOP, NAVY_BOTTOM = (20, 23, 56), (9, 10, 30)
-STOPS = [(0.0, BLUE), (1.0, VIOLET)]
+PINK, PINK_LIGHT = (255, 61, 132), (255, 138, 192)
+BG_TOP, BG_BOTTOM = (40, 40, 45), (13, 13, 15)
+STOPS = [(0.0, PINK), (1.0, PINK_LIGHT)]
 
 
 def lerp(a, b, t):
@@ -33,11 +33,11 @@ def gradient(size: int) -> Image.Image:
 
 
 def hgradient(size: int, x0: float, x1: float) -> Image.Image:
-    """Gradiente horizontal azul -> violeta entre x0 e x1 (frações da largura)."""
+    """Gradiente horizontal rosa -> rosa-claro entre x0 e x1 (frações da largura)."""
     line = Image.new("RGB", (size, 1))
     for x in range(size):
         t = min(1.0, max(0.0, (x / size - x0) / (x1 - x0)))
-        line.putpixel((x, 0), lerp(BLUE, VIOLET, t))
+        line.putpixel((x, 0), lerp(PINK, PINK_LIGHT, t))
     return line.resize((size, size), Image.NEAREST)
 
 
@@ -75,17 +75,17 @@ def arc(draw: ImageDraw.ImageDraw, cx, cy, radius, width, a0, a1, fill) -> None:
 
 
 def render(small: bool = False) -> Image.Image:
-    """Família visual do LoopVideo: azul-marinho + desenho em gradiente azul -> violeta.
+    """Tema Grafite: fundo grafite + desenho em gradiente rosa-choque.
     small=True: versão simplificada e mais grossa para 16-32 px."""
     W = S
     shape = squircle(W, 0.02 if small else 0.035)
 
-    base = Image.new("RGBA", (W, W), NAVY_TOP)
+    base = Image.new("RGBA", (W, W), BG_TOP)
     shade = Image.new("L", (1, 256))
     for y in range(256):
         shade.putpixel((0, y), y)
-    base = Image.composite(Image.new("RGBA", (W, W), NAVY_BOTTOM), base, shade.resize((W, W)))
-    for (cx, cy, rad, color, alpha) in ((0.25, 0.4, 0.5, BLUE, 34), (0.8, 0.65, 0.45, VIOLET, 30)):
+    base = Image.composite(Image.new("RGBA", (W, W), BG_BOTTOM), base, shade.resize((W, W)))
+    for (cx, cy, rad, color, alpha) in ((0.25, 0.4, 0.5, PINK, 34), (0.8, 0.65, 0.45, PINK_LIGHT, 30)):
         glow = Image.new("L", (W, W), 0)
         ImageDraw.Draw(glow).ellipse([(cx - rad) * W, (cy - rad) * W, (cx + rad) * W, (cy + rad) * W], fill=alpha)
         base = Image.composite(Image.new("RGBA", (W, W), color + (255,)), base, glow.filter(ImageFilter.GaussianBlur(W * 0.16)))
@@ -113,13 +113,13 @@ def render(small: bool = False) -> Image.Image:
     if not small:
         d2 = ImageDraw.Draw(art)
         sparkle(d2, 0.775 * W, 0.215 * W, 0.07 * W, (238, 240, 250, 255))
-        sparkle(d2, 0.86 * W, 0.33 * W, 0.03 * W, (180, 160, 255, 230))
+        sparkle(d2, 0.86 * W, 0.33 * W, 0.03 * W, (255, 194, 218, 230))
 
     edge = Image.new("L", (W, W), 0)
     edge.paste(255, (0, 0), shape)
     inner = edge.filter(ImageFilter.MinFilter(9))
     rim = ImageChops.subtract(edge, inner).point(lambda v: v * 0.22)
-    art = Image.composite(Image.new("RGBA", (W, W), (150, 160, 255, 255)), art, rim)
+    art = Image.composite(Image.new("RGBA", (W, W), (200, 200, 208, 255)), art, rim)
 
     out = Image.new("RGBA", (W, W), (0, 0, 0, 0))
     out.paste(art, (0, 0), shape)

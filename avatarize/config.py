@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 APP_NAME = "Avatarize"
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 
 # Único servidor com quem o app conversa (além dos links de upload/download que ele mesmo devolve).
 SERVER_URL = "https://mcp.heygen.com/mcp/v1/"

@@ -1,6 +1,6 @@
 [project]
 name = "avatarize"
-version = "1.1.0"
+version = "1.2.0"
 description = "App desktop para gerar vídeos de avatar no HeyGen (foto + áudio ou voz) via servidor MCP oficial."
 requires-python = ">=3.12,<3.13"
 dependencies = [
