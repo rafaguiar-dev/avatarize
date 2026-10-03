@@ -211,5 +211,75 @@ check(service.list_voices(engine="elevenlabs")[0].name == "Ana", "list_voices")
 check(service.whoami(interactive=False)["plan"] == "Pro", "whoami lê email/plano")
 raises(ValueError, lambda: service.generate_video(service.VideoJob(photo=TMP / "foto.png")), "job sem áudio nem texto")
 
+print("ponte da interface (sem janela)")
+import time as _time  # noqa: E402
+
+from avatarize import app as app_mod  # noqa: E402
+
+ponte = app_mod.Ponte()
+check(ponte.generate({"modo": "audio"}) == {"erro": "Conecte sua conta HeyGen primeiro."}, "gerar sem login é recusado")
+asyncio.run(auth.SessionStorage().set_tokens(OAuthToken(access_token="t", token_type="Bearer")))
+check("erro" in ponte.generate({"modo": "audio"}), "gerar sem foto é recusado")
+foto = ponte._photo_info(TMP / "foto.png")
+check(foto["thumb"].startswith("data:image/jpeg;base64,") and "64×64" in foto["info"], "foto ganha miniatura e tamanho")
+check("erro" in ponte.generate({"modo": "audio", "audios": []}), "gerar sem áudio é recusado")
+check("erro" in ponte.generate({"modo": "texto", "texto": "oi"}), "modo texto sem voz é recusado")
+
+feitos: list = []
+falhar = {"vez": True}
+
+
+def fake_generate(spec, log=None, on_step=None):
+    for etapa in (service.STEPS_TEXT if spec.script else service.STEPS_AUDIO):
+        on_step(etapa)
+    if spec.audio and spec.audio.name == "b.wav" and falhar["vez"]:
+        falhar["vez"] = False
+        raise RuntimeError("créditos insuficientes")
+    feitos.append(spec)
+    out = TMP / "videos" / f"{len(feitos)}.mp4"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(b"mp4")
+    return out
+
+
+app_mod.service.generate_video = fake_generate
+(TMP / "a.wav").write_bytes(b"RIFF\x00\x00\x00\x00WAVEfmt ")
+(TMP / "b.wav").write_bytes(b"RIFF\x00\x00\x00\x00WAVEfmt ")
+ids = [ponte._audio_info(TMP / n)["id"] for n in ("a.wav", "b.wav")]
+r = ponte.generate({"modo": "audio", "audios": ids, "formato": "16:9", "res": "4k", "expr": "high", "movimento": " smile "})
+check(len(r["jobs"]) == 2 and r["jobs"][0]["state"] == "queued", "um job por áudio, entra na fila")
+check(r["jobs"][0]["resolution"] == "1080p" and r["jobs"][0]["aspect"] == "16:9", "valores inválidos viram o padrão")
+
+
+def esperar(cond, segundos=5.0):
+    fim = _time.time() + segundos
+    while _time.time() < fim and not cond():
+        _time.sleep(0.05)
+    return cond()
+
+
+j1, j2 = (j["id"] for j in r["jobs"])
+check(esperar(lambda: ponte._jobs[j2]["state"] in ("done", "error")), "fila processa em sequência")
+check(ponte._jobs[j1]["state"] == "done" and ponte._jobs[j1]["step"] == "baixar", "job pronto passou por todas as etapas")
+check(ponte._jobs[j2]["state"] == "error" and "créditos" in ponte._jobs[j2]["error"], "erro aparece no job")
+check(feitos[0].motion_prompt == "smile" and feitos[0].expressiveness == "high", "opções chegam no motor")
+check(ponte.retry(j2)["state"] == "queued", "tentar de novo recoloca na fila")
+check(esperar(lambda: ponte._jobs[j2]["state"] == "done"), "segunda tentativa funciona")
+check(ponte.remove(j1) and j1 not in ponte._jobs, "remover da lista")
+ponte.logout()
+check(not auth.is_connected(), "sair apaga a sessão")
+
+events: list = []
+ponte._emit = lambda tipo, **d: events.append((tipo, d))
+(TMP / "x.bin").write_bytes(b"nada")
+ponte._on_drop({"dataTransfer": {"files": [
+    {"name": "foto.png", "pywebviewFullPath": str(TMP / "foto.png")},
+    {"name": "a.wav", "pywebviewFullPath": str(TMP / "a.wav")},
+    {"name": "x.bin", "pywebviewFullPath": str(TMP / "x.bin")},
+]}})
+tipo, d = events[-1]
+check(tipo == "drop" and d["foto"]["name"] == "foto.png" and len(d["audios"]) == 1 and d["outros"] == 1,
+      "arrastar separa foto, áudio e outros")
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\n{passed} verificações passaram.")

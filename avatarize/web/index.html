@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Avatarize</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header>
+  <div class="marca"><img src="logo.png" alt=""><b>Avatarize</b><span class="ver" id="ver"></span></div>
+  <span class="sp"></span>
+  <div class="conta hidden" id="conta">
+    <button class="pill" id="btnConta" aria-haspopup="menu" aria-expanded="false">
+      <i class="dot ok"></i><span id="contaTxt">Conectado</span><i data-ic="chev"></i>
+    </button>
+    <div class="menu hidden" id="menuConta" role="menu">
+      <div class="mnome"><span>Conta HeyGen</span><b id="menuEmail"></b><small id="menuPlano"></small></div>
+      <button id="btnTrocar" role="menuitem"><i data-ic="refresh"></i>Trocar de conta</button>
+      <button id="btnSair" class="perigo" role="menuitem"><i data-ic="sair"></i>Sair desta conta</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <aside class="criar">
+    <div class="criar-topo">
+      <h1>Novo vídeo</h1>
+      <p>Uma foto e uma fala viram um avatar falando, direto na sua conta HeyGen.</p>
+    </div>
+
+    <div class="criar-corpo">
+      <section class="campo">
+        <div class="rot"><label>Foto do avatar</label><span>rosto de frente, boa luz</span></div>
+        <div class="drop" id="dzFoto" tabindex="0" role="button">
+          <span class="bolha"><i data-ic="imagem"></i></span>
+          <span><b>Arraste aqui ou <u>escolha a foto</u></b><small>JPG, PNG, WebP, HEIC… convertemos se precisar</small></span>
+        </div>
+        <div class="arquivo hidden" id="fotoCard">
+          <img id="fotoThumb" alt="">
+          <div class="info"><b id="fotoNome"></b><span id="fotoInfo"></span></div>
+          <button class="sm" id="btnTrocarFoto"><i data-ic="enviar"></i>Trocar</button>
+        </div>
+      </section>
+
+      <section class="campo">
+        <div class="rot"><label>Fala</label></div>
+        <div class="seg" id="segModo">
+          <button data-v="audio" class="on"><i data-ic="onda"></i>Áudio próprio</button>
+          <button data-v="texto"><i data-ic="texto"></i>Gerar voz</button>
+        </div>
+      </section>
+
+      <div id="pAudio" class="campo" style="gap:18px">
+        <section class="campo">
+          <div class="rot"><label>Áudios</label><span>um vídeo para cada áudio</span></div>
+          <div class="drop slim" id="dzAudio" tabindex="0" role="button">
+            <span class="bolha"><i data-ic="enviar"></i></span>
+            <span><b>Arraste aqui ou <u>escolha os áudios</u></b><small>MP3, WAV, M4A, OGG, FLAC…</small></span>
+          </div>
+          <ul class="lista-audio" id="listaAudio"></ul>
+        </section>
+        <section class="campo">
+          <label class="chave"><input type="checkbox" id="chkCorte"><span class="trilho"></span><span>Cortar silêncios</span></label>
+          <div class="seg trava" id="segCorte">
+            <button data-v="Suave">Suave</button><button data-v="Médio" class="on">Médio</button><button data-v="Forte">Forte</button>
+          </div>
+          <p class="dica" id="dicaCorte">Tira as pausas longas da fala antes de enviar.</p>
+        </section>
+      </div>
+
+      <div id="pTexto" class="campo hidden" style="gap:18px">
+        <section class="campo">
+          <div class="rot"><label>Voz</label><button class="link" id="btnClonar"><i data-ic="mic"></i>Clonar minha voz</button></div>
+          <button class="seletor" id="btnVoz">
+            <span class="av"><i data-ic="pessoa"></i></span>
+            <span class="txt"><b id="vozNome">Escolher voz</b><small id="vozInfo">clonadas ou da biblioteca da HeyGen</small></span>
+            <i data-ic="chev"></i>
+          </button>
+        </section>
+        <section class="campo">
+          <div class="rot"><label for="txtScript">Texto que o avatar vai falar</label><span id="contador">0 caracteres</span></div>
+          <textarea id="txtScript" rows="6" placeholder="Escreva aqui o que o avatar vai dizer…"></textarea>
+        </section>
+      </div>
+
+      <section class="dupla">
+        <div class="campo"><div class="rot"><label>Formato</label></div>
+          <div class="seg" id="segFormato"><button data-v="9:16" class="on">9:16</button><button data-v="16:9">16:9</button></div></div>
+        <div class="campo"><div class="rot"><label>Qualidade</label></div>
+          <div class="seg" id="segRes"><button data-v="720p">720p</button><button data-v="1080p" class="on">1080p</button></div></div>
+      </section>
+
+      <section class="campo">
+        <div class="rot"><label>Expressão</label><span>quanto o avatar se mexe</span></div>
+        <div class="seg" id="segExpr">
+          <button data-v="low">Baixa</button><button data-v="medium" class="on">Média</button><button data-v="high">Alta</button>
+        </div>
+      </section>
+
+      <details class="avancado" id="avancado">
+        <summary><i data-ic="ajustes"></i><b>Avançado</b><span id="avResumo"></span><i data-ic="chev"></i></summary>
+        <div class="av-corpo">
+          <label for="txtMov">Movimento <span>· opcional, em inglês</span></label>
+          <input type="text" id="txtMov" placeholder="ex.: lean in, look at camera, smile">
+          <label>Salvar os vídeos em</label>
+          <div class="pasta"><span id="pastaTxt"></span><button class="sm" id="btnPasta"><i data-ic="pasta"></i>Trocar</button></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="criar-pe">
+      <button class="pri" id="btnGerar" disabled><i data-ic="brilho"></i><span class="gtxt" id="gerarTxt">Gerar vídeo</span><span class="cr" id="gerarPill"></span></button>
+      <p class="nota">1080p gasta mais crédito da HeyGen que 720p.</p>
+    </div>
+  </aside>
+
+  <section class="result">
+    <div class="res-topo">
+      <h2>Seus vídeos</h2>
+      <div class="badges" id="badges"></div>
+      <span class="sp"></span>
+      <button class="contorno" id="btnAbrirPasta"><i data-ic="pasta"></i>Abrir pasta</button>
+    </div>
+    <div class="lista hidden" id="lista"></div>
+    <div class="vazio" id="vazio">
+      <svg class="ilu" viewBox="0 0 120 120" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#3B8CF5"/><stop offset="1" stop-color="#B43CF0"/></linearGradient></defs>
+        <rect x="14" y="18" width="92" height="84" rx="14" stroke="#3A4078"/>
+        <circle cx="52" cy="54" r="13" stroke="#9095C4"/>
+        <path d="M30 98c2-14 11-22 22-22s20 8 22 22" stroke="#9095C4"/>
+        <path d="M74 44c4 4 4 16 0 20M81 38c7 7 7 25 0 32M88 32c10 10 10 34 0 44" stroke="url(#g1)" opacity=".85"/>
+      </svg>
+      <b>Seus vídeos aparecem aqui</b>
+      <p>Escolha a foto e a fala ao lado e clique em <b style="font-size:14px">Gerar vídeo</b>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="seguro"><i data-ic="cadeado"></i>Login criptografado neste PC</span>
+  <span class="ff" id="ffTxt"></span>
+  <span class="sp"></span>
+  <span class="devby">desenvolvido por <a href="#" id="devBy" title="github.com/rafaguiar-dev">rafaguiar-dev</a></span>
+</footer>
+
+<div id="portao">
+  <div class="fundo"></div>
+  <div class="p-marca"><img src="logo.png" alt=""><span><b>Avatarize</b><span>foto que fala, na sua conta HeyGen</span></span></div>
+  <div class="p-card" id="pCard">
+    <div class="p-ic roda" id="pIc"><i data-ic="pessoa"></i></div>
+    <h2 id="pTit">Abrindo…</h2>
+    <p id="pTxt"></p>
+    <div class="p-acoes">
+      <button class="pri hidden" id="btnConectar"><i data-ic="ligar"></i><span class="gtxt">Conectar HeyGen</span></button>
+      <button class="link hidden" id="btnCancelarLogin">Cancelar e voltar</button>
+    </div>
+    <p class="p-nota" id="pNota">O acesso fica criptografado neste PC. Dá para sair quando quiser.</p>
+  </div>
+  <div class="p-pe"><span class="devby">desenvolvido por <a href="#" class="devlink">rafaguiar-dev</a></span></div>
+</div>
+
+<dialog id="dlgVoz">
+  <div class="dlg-topo"><h3>Escolher voz</h3><button class="fantasma icone-btn" data-fecha aria-label="Fechar"><i data-ic="x"></i></button></div>
+  <div class="dlg-corpo">
+    <div class="chips" id="chipsMotor"></div>
+    <div class="busca"><i data-ic="busca"></i><input type="text" id="buscaVoz" placeholder="Pesquisar pelo nome"></div>
+    <div class="vozes" id="listaVozes"></div>
+  </div>
+  <div class="dlg-pe"><button class="link" id="btnAtualizarVozes"><i data-ic="refresh"></i>Atualizar lista</button><span class="sp"></span><span class="mut" id="vozesQtd" style="font-size:13px"></span></div>
+</dialog>
+
+<dialog id="dlgClone">
+  <div class="dlg-topo"><h3>Clonar minha voz</h3><button class="fantasma icone-btn" data-fecha aria-label="Fechar"><i data-ic="x"></i></button></div>
+  <div class="dlg-corpo">
+    <p>Envie um áudio limpo, só com a sua voz (30 s a 2 min funciona bem). Ela fica na sua conta HeyGen, em <b>Minhas vozes</b>.</p>
+    <label for="cloneNome">Nome da voz</label>
+    <input type="text" id="cloneNome" placeholder="ex.: Voz do Rafa">
+    <label>Áudio</label>
+    <div class="arquivo-linha"><button id="btnCloneAudio"><i data-ic="enviar"></i>Escolher áudio</button><span id="cloneAudioNome">Nenhum arquivo</span></div>
+    <p class="status" id="cloneStatus"></p>
+  </div>
+  <div class="dlg-pe"><span class="sp"></span><button class="contorno" data-fecha>Cancelar</button><button class="pri" id="btnCloneOk"><span class="gtxt" style="text-align:center">Clonar voz</span></button></div>
+</dialog>
+
+<div id="toast" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>

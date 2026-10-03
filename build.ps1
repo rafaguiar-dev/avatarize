@@ -11,7 +11,8 @@ uv run pyinstaller --noconfirm --clean --onefile --windowed `
     --name Avatarize `
     --icon avatarize/assets/icon.ico `
     --add-data "avatarize/assets;avatarize/assets" `
-    --collect-data customtkinter `
+    --add-data "avatarize/web;avatarize/web" `
+    --collect-all webview `
     run_app.py
 
 $exe = Join-Path $PSScriptRoot "dist\Avatarize.exe"

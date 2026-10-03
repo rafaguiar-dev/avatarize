@@ -12,7 +12,7 @@ def main() -> None:
 
         dump_tools()
         return
-    from avatarize.ui import run
+    from avatarize.app import run
 
     run()
 

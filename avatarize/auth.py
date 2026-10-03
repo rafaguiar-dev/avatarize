@@ -128,11 +128,25 @@ class LoopbackReceiver:
         finally:
             self.close()
 
+    def cancel(self) -> None:
+        if not self._done.is_set():
+            self.params = {"error": "cancelado"}
+            self._done.set()
+
     def close(self) -> None:
         server, self._server = self._server, None
         if server:
             server.shutdown()
             server.server_close()
+
+
+_active: LoopbackReceiver | None = None
+
+
+def cancel_login() -> None:
+    """Desiste do login em andamento (a pessoa fechou a aba ou clicou em Cancelar)."""
+    if _active is not None:
+        _active.cancel()
 
 
 def build_auth(on_status: StatusFn | None, *, interactive: bool) -> tuple[OAuthClientProvider, LoopbackReceiver]:
@@ -141,10 +155,12 @@ def build_auth(on_status: StatusFn | None, *, interactive: bool) -> tuple[OAuthC
     receiver = LoopbackReceiver()
 
     async def redirect_handler(auth_url: str) -> None:
+        global _active
         if not interactive:
             raise NotConnectedError("Sessão expirada. Clique em 'Conectar HeyGen' para entrar de novo.")
         say("Abrindo o navegador para login no HeyGen...")
         receiver.start()
+        _active = receiver
         if not webbrowser.open(auth_url):
             say(f"Abra este link no navegador para entrar: {auth_url}")
 

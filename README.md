@@ -13,7 +13,7 @@
   <a href="https://github.com/rafaguiar-dev/avatarize/releases/latest"><b>⬇️ Baixar o Avatarize.exe</b></a>
 </p>
 
-<p align="center"><img src="docs/screenshot.png" width="620" alt="Tela do Avatarize"></p>
+<p align="center"><img src="docs/screenshot.png" width="820" alt="Tela do Avatarize"></p>
 
 ## O que faz
 
@@ -22,18 +22,19 @@
 - **Clonar sua voz** uma vez e usar depois em "⭐ Minhas vozes".
 - Formato **9:16** ou **16:9**, **720p** ou **1080p**, nível de **expressão** e **movimento** opcional (ex.: `lean in, look at camera`).
 - **Cortar silêncios** do áudio antes de enviar (precisa do [ffmpeg](https://ffmpeg.org/download.html)).
-- **Fila**: adicione vários vídeos; eles são gerados em sequência e baixados como MP4 em `Vídeos\Avatarize`.
+- **Fila** com etapas e progresso: adicione vários vídeos; eles são gerados em sequência e baixados como MP4 em `Vídeos\Avatarize`. Se der erro, é só **Tentar de novo**.
+- **Arraste e solte** a foto e os áudios direto na janela.
 - Converte sozinho foto e áudio para o que a HeyGen aceita (JPG/PNG e MP3/WAV) e limpa metadados pesados de MP3.
 
 O vídeo é gerado direto da foto: nenhum avatar é criado na sua conta.
 
 ## Como usar
 
-1. Baixe e abra o `Avatarize.exe` ([Releases](https://github.com/rafaguiar-dev/avatarize/releases/latest)).
+1. Baixe e abra o `Avatarize.exe` ([Releases](https://github.com/rafaguiar-dev/avatarize/releases/latest)). Precisa do Windows 10 ou 11 com o WebView2 (já vem no Windows 11).
    O executável não tem assinatura digital, então o Windows pode avisar "editor desconhecido": clique em *Mais informações → Executar assim mesmo*.
    Confira o SHA-256 publicado na Release se quiser ter certeza de que o arquivo é o original.
 2. **Conectar HeyGen** → o site da HeyGen abre no navegador; entre e autorize. Volte ao app.
-3. Escolha a foto, o áudio (ou o texto e a voz), o formato, e clique em **Gerar vídeo**.
+3. Arraste a foto e o áudio (ou escreva o texto e escolha a voz), escolha o formato e clique em **Gerar vídeo**.
 
 ## Segurança
 
@@ -76,7 +77,8 @@ uv run python -m avatarize --list-tools
 
 ```
 avatarize/
-  ui.py            interface (customtkinter) e fila
+  app.py           janela (pywebview + WebView2) e a ponte com a interface
+  web/             interface: index.html, app.css, app.js, fonte Geist
   service.py       fluxos: vídeo, vozes, clonagem, conta
   heygen.py        sessão MCP e leitura das respostas
   auth.py          login OAuth + retorno em 127.0.0.1
@@ -86,6 +88,10 @@ avatarize/
 tools/make_icon.py gera o ícone
 tests/             testes offline
 ```
+
+## Créditos
+
+Desenvolvido por [rafaguiar-dev](https://github.com/rafaguiar-dev). Fonte [Geist](https://github.com/vercel/geist-font) (SIL Open Font License, em `avatarize/web/fonts/OFL.txt`).
 
 ## Aviso
 

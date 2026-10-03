@@ -200,8 +200,14 @@ async def _wait_video(client, video_id: str, log: Log) -> str:
         delay = min(delay + 2, 20)
 
 
-def generate_video(job: VideoJob, log: Log = _quiet) -> Path:
-    """Roda o fluxo inteiro e devolve o caminho do MP4 baixado."""
+STEPS_AUDIO = ["preparar", "foto", "audio", "criar", "gerando", "baixar"]
+STEPS_TEXT = ["preparar", "foto", "criar", "gerando", "baixar"]
+
+
+def generate_video(job: VideoJob, log: Log = _quiet, on_step: Log = _quiet) -> Path:
+    """Roda o fluxo inteiro e devolve o caminho do MP4 baixado.
+
+    on_step recebe a etapa atual (uma das STEPS_AUDIO / STEPS_TEXT)."""
     if not job.script and not job.audio:
         raise ValueError("informe um áudio ou um texto + voz")
     if job.script and not job.voice_id:
@@ -210,6 +216,7 @@ def generate_video(job: VideoJob, log: Log = _quiet) -> Path:
     async def go():
         with tempfile.TemporaryDirectory(prefix="avatarize_", ignore_cleanup_errors=True) as tmp:
             work = Path(tmp)
+            on_step("preparar")
             photo, photo_mime = media.prepare_image(Path(job.photo), work, log)
             audio = audio_mime = None
             if not job.script:
@@ -219,6 +226,7 @@ def generate_video(job: VideoJob, log: Log = _quiet) -> Path:
                 audio, audio_mime = media.prepare_audio(src, work, log)
 
             async with open_session(log) as client:
+                on_step("foto")
                 image_ref = await _upload(client, photo, photo_mime, "foto", log)
                 body: dict[str, Any] = {
                     "image": image_ref,
@@ -235,20 +243,24 @@ def generate_video(job: VideoJob, log: Log = _quiet) -> Path:
                     if abs(job.voice_speed - 1.0) > 1e-6:
                         body["voiceSettings"] = {"speed": job.voice_speed}
                 else:
+                    on_step("audio")
                     ref = await _upload(client, audio, audio_mime, "áudio", log)
                     if ref["type"] == "url":
                         body["audioUrl"] = ref["url"]
                     else:
                         body["audioAssetId"] = ref["asset_id"]
 
+                on_step("criar")
                 log("Criando o vídeo no HeyGen...")
                 created = await call(client, "create_video_from_image", body)
                 video_id = find(created, "video_id", "id")
                 if not video_id:
                     raise HeyGenError(f"o HeyGen não devolveu o id do vídeo: {created}")
+                on_step("gerando")
                 log(f"Vídeo em processamento (id {video_id}). Aguardando...")
                 url = await _wait_video(client, str(video_id), log)
 
+        on_step("baixar")
         log("Baixando o MP4...")
         dest = Path(job.out_dir) / f"{_safe_name(job.title)}_{video_id}.mp4"
         return await asyncio.to_thread(net.download, url, dest)
